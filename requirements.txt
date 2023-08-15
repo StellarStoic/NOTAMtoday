@@ -8,8 +8,3 @@ python-telegram-bot==13.13
 requests==2.31.0
 selenium==4.11.2
 telegram==0.0.1
-zipfile
-shutil
-datetime
-re
-io

@@ -1,0 +1,15 @@
+beautifulsoup4==4.11.1
+folium==0.14.0
+geopandas==0.13.2
+pykml==0.2.0
+pytz
+python-dotenv==0.21.0
+python-telegram-bot==13.13
+requests==2.31.0
+selenium==4.11.2
+telegram==0.0.1
+zipfile
+shutil
+datetime
+re
+io

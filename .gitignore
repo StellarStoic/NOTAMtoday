@@ -1,0 +1,4 @@
+.env
+/Testing
+__pycache__
+bot_log.txt

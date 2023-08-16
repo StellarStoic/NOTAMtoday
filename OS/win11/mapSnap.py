@@ -11,39 +11,32 @@ def main():
         options = webdriver.ChromeOptions()
         options.add_argument('--headless')
         options.add_argument('window-size=1280x720') # Do not increase the resolution. Mobile viewer will hate you!
-        driver_path = "/usr/bin/chromedriver"
-        # Add the path of chromedriver to the PATH environment variable
-        os.environ["PATH"] += os.pathsep + os.path.dirname(driver_path)
+        driver = webdriver.Chrome(options=options)
 
-        # Initialize the Chrome WebDriver
-        driver = webdriver.Chrome(executable_path="/usr/bin/chromedriver", options=options)
-
-
-
-
+        
         # Open the HTML file with the driver
         driver.get(f"file://{html_path}")
-
+        
         # Explicitly wait for the map element to be present
         try:
             element_present = EC.presence_of_element_located((By.ID, 'map_96633ea7002869c56cf6afa8144cb43a'))
             WebDriverWait(driver, 20).until(element_present)
         except Exception as e:
             print(f"Error: {e}")
-
-
+        
+        
         # Capture the screenshot and save it
         driver.save_screenshot(output_image_path)
-
+        
         # Close the driver
         driver.quit()
 
     def process_html_files_in_directory(directory_path):
         # Ensure the 'SNAPS' directory exists or create it
-        screenshot_dir = os.path.join(os.path.dirname(directory_path), '/home/NOTAMtoday/NOTAMtoday/SNAPs')
+        screenshot_dir = os.path.join(os.path.dirname(directory_path), 'SNAPs')
         if not os.path.exists(screenshot_dir):
             os.makedirs(screenshot_dir)
-
+        
         # Iterate through each file in the directory
         for filename in os.listdir(directory_path):
             if filename.endswith('.html'):
@@ -53,8 +46,8 @@ def main():
                 capture_screenshot(html_path, output_image_path)
 
     # Example usage
-    directory_path = "/home/NOTAMtoday/NOTAMtoday/HTMLs"
+    directory_path = "HTMLs"
     process_html_files_in_directory(directory_path)
-
+    
 if __name__ == "__main__":
     main()

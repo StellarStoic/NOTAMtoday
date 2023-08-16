@@ -30,8 +30,12 @@ _CHECKING ONLY NOTAMS FROM BETWEEN **GND** AND UP **TO 3000m** AND PROCESSING **
 ### Setup & Usage:
 1. Ensure all required Python libraries are installed. to do this use `pip install -r requirements.txt`
 
-2. Store secrets and configurations in the `ENV` file like this...
+2. Make sure you have Chromium drivers installed first (If running on RPi, you might facing issues with GDAL, Fiona, Geopandas but it's doable. A rough how-to txt files are in randomFiles folder)  
+ 
+3. Store secrets and configurations in the `ENV` file like this...
 `GROUP_CHAT_ID=-1105658887564`
 `API_KEY=6025761979:TrewER4ewSSwdE-R-2NtrEd4Z6Dd`
 
-3. Run `NOTAMtodaybot.py` to start the bot.
+4. Run `NOTAMtodaybot.py` to start the bot.
+
+_I'm running this on RPi3 and the mapSnap.py differs from the one I'm using on windows machine because of the Chromium drivers. I will include folder named "OS" which will works on win11_ 

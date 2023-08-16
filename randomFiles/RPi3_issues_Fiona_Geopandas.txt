@@ -1,0 +1,53 @@
+Could not install Fiona the dependency of geopandas (pip install geopandas did not work) => Work arround needed
+
+err message...
+ × Getting requirements to build wheel did not run successfully.
+  │ exit code: 1
+  ╰─> [3 lines of output]
+      <string>:86: DeprecationWarning: The 'warn' function is deprecated, use 'warning' instead
+      WARNING:root:Failed to get options via gdal-config: [Errno 2] No such file or directory: 'gdal-config'
+      CRITICAL:root:A GDAL API version must be specified. Provide a path to gdal-config using a GDAL_CONFIG environment variable or use a GDAL_VERSION environment variable.
+      [end of output]
+
+
+
+Installation process and fixing the problem...
+
+1.) The GDAL library is often required for geospatial operations and is a dependency for fiona. The error messages suggest that your system might be missing the GDAL library or its configuration.
+
+Here's what you can try to resolve the issue:
+
+Install GDAL and its Dependencies: The error message indicates that GDAL is missing or improperly configured. You need to install the GDAL library and its dependencies. Run the following commands to install GDAL and its dependencies:
+
+sudo apt-get update
+sudo apt-get install libgdal-dev gdal-bin
+
+2.) Open Your Shell's Startup File:
+On a Raspberry Pi, you can use the .bashrc file for this purpose.
+Edit the Startup File:
+Use a text editor to open the .bashrc file. You can use the nano text editor:
+nano ~/.bashrc
+
+3.)  Add GDAL Environment Variables:
+Add the following lines to the end of the .bashrc file:
+
+export CPLUS_INCLUDE_PATH=/usr/include/gdal
+export C_INCLUDE_PATH=/usr/include/gdal
+export GDAL_DATA=/usr/share/gdal
+Save and Exit
+
+4.) Apply the Changes:
+To apply the changes, either restart your terminal or run the following command: 
+source ~/.bashrc
+
+5.) pip install fiona 
+
+ 
+6.) now that you have successfully installed fiona and configured GDAL, you can proceed to install geopandas. Since geopandas also has dependencies on other geospatial libraries, it's a good idea to use a package manager like apt to install them before installing geopandas.
+
+You can install the necessary libraries using the following command:
+sudo apt install libgeos-dev libproj-dev
+
+
+7.) pip install geopandas
+

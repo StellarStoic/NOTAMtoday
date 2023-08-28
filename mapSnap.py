@@ -27,7 +27,7 @@ def main():
         # Explicitly wait for the map element to be present
         try:
             element_present = EC.presence_of_element_located((By.ID, 'map_96633ea7002869c56cf6afa8144cb43a'))
-            WebDriverWait(driver, 20).until(element_present)
+            WebDriverWait(driver, 60).until(element_present)
         except Exception as e:
             print(f"Error: {e}")
 

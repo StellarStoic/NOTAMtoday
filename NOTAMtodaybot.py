@@ -11,6 +11,10 @@ from mapSnap import main as capture_image
 import time
 from datetime import datetime
 from datetime import date
+from requests.exceptions import RequestException
+
+# Configure logging
+logging.basicConfig(filename="/home/NOTAMtoday/NOTAMtoday/t_bot.log", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Load environment variables
 load_dotenv()
@@ -34,10 +38,12 @@ def send_telegram_image(chat_id, api_key, img_path, notam):
     """
     Sends an image to the specified Telegram chat with NOTAM details as the caption.
     """
+    logging.error(f"Trying to send image from path: {img_path}")  # Debug: print image path
     print(f"Trying to send image from path: {img_path}")  # Debug: print image path
     
     # Check if the image exists at the specified path
     if not os.path.exists(img_path):
+        logging.error(f"Image not found at path: {img_path}")
         print(f"Image not found at path: {img_path}")
         return
     
@@ -65,6 +71,7 @@ KML File: {notam[10]}
             "photo": img_file
         }
         response = requests.post(base_url, data=payload, files=files)
+        logging.error(f"Response from Telegram: {response.json()}")  # Debug: print API response
         print(f"Response from Telegram: {response.json()}")  # Debug: print API response
     return response.json()
 
@@ -77,64 +84,13 @@ def read_notam_ids(filename="/home/NOTAMtoday/NOTAMtoday/notamIDs.txt"):
     except FileNotFoundError:
         return set()
 
+# # This writes all the NotamID that we get (useful if you don't want to repeat NOTAMS)
 # def write_notam_ids(ids, filename="notamIDs.txt"):
 #     with open(filename, "w") as file:
 #         for notam_id in ids:
 #             file.write(f"{notam_id}\n")
 
-# Read existing NOTAM IDs from file
-existing_ids = read_notam_ids()
 
-# Extract all NOTAMs, then filter to get new NOTAMs based on their IDs (notam_number)
-all_notams = [notam for date in notams_by_day for notam in notams_by_day[date]]
-new_notams = [notam for notam in all_notams if notam[0] not in existing_ids]
-
-# Processing new NOTAMs
-for notam in new_notams:
-    notam_id = notam[0]
-    
-    # Download KML files
-    handling_files.handling_files()
-
-
-    # Generate the maps (HTML files)
-    generate_map()
-
-
-    # Capture images from the generated maps
-    capture_image()
-    
-    # # Capture the map image using Selenium
-    # img_path = capture_image()
-
-    # Format the NOTAM message
-    message = f'''
-NOTAM Number: {notam[0]}\n
-{notam[1]}\n
-{notam[2]}
-{notam[5]}\n
-{notam[6]}\n
-{notam[7]}\n
-{notam[8]}\n
-Čas objave: {notam[9]}
-KML File: {notam[10]}
-'''
-
-    # Send the associated image for the NOTAM
-    img_name = notam_id.replace('/', '-') + '.png'
-    img_path = os.path.join('/home/NOTAMtoday/NOTAMtoday/SNAPs', img_name)
-    # Check if the image exists
-    if os.path.exists(img_path):
-        # Send the image with NOTAM details as the caption to the Telegram chat
-        send_telegram_image(GROUP_CHAT_ID, API_KEY, img_path, notam)
-    else:
-        # If the image doesn't exist, just send the NOTAM message
-        send_telegram_message(GROUP_CHAT_ID, API_KEY, message)
-        
-    existing_ids.add(notam[0])
-
-# # Write the updated NOTAM IDs back to the file
-# write_notam_ids(existing_ids)
 
 def run_log():
     today = date.today()
@@ -157,7 +113,7 @@ def run_log():
             logging.error(f"Error sending message for NOTAM {notam_id}: {e}")
             raise
 
-        image_path = os.path.join("/home/NOTAMtoday/NOTAMtoday/SNAPs", f"{notam_id}.png")
+        image_path = os.path.join("SNAPs", f"{notam_id}.png")
         if os.path.exists(image_path):
             try:
                 send_telegram_image(CHAT_ID, TELEGRAM_API_KEY, image_path, notam_message)
@@ -166,11 +122,80 @@ def run_log():
                 logging.error(f"Error sending image for NOTAM {notam_id}: {e}")
                 raise
 
-# Configure logging
-logging.basicConfig(filename="/home/NOTAMtoday/NOTAMtoday/bot_log.txt", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-'''
-    Use cron for timer
-    crontab -e
-    30 5 * * * /path/to/python3 /path/to/your/script.py
-'''
+# retry function if there's no network
+def run_with_retries(retry_count, retry_delay=300): # wait 5 minutes before retry
+    for i in range(retry_count):
+        try:
+            # Read existing NOTAM IDs from file
+            existing_ids = read_notam_ids()
+
+            # Extract all NOTAMs, then filter to get new NOTAMs based on their IDs (notam_number)
+            all_notams = [notam for date in notams_by_day for notam in notams_by_day[date]]
+            new_notams = [notam for notam in all_notams if notam[0] not in existing_ids]
+
+            # Processing new NOTAMs
+            for notam in new_notams:
+                notam_id = notam[0]
+                
+                # Download KML files
+                handling_files.handling_files()
+
+
+                # Generate the maps (HTML files)
+                generate_map()
+
+
+                # Capture images from the generated maps
+                capture_image()
+                
+                # # Capture the map image using Selenium
+                # img_path = capture_image()
+
+                # Format the NOTAM message
+                message = f'''
+            NOTAM Number: {notam[0]}\n
+            {notam[1]}\n
+            {notam[2]}
+            {notam[5]}\n
+            {notam[6]}\n
+            {notam[7]}\n
+            {notam[8]}\n
+            Čas objave: {notam[9]}
+            KML File: {notam[10]}
+            '''
+
+                # Send the associated image for the NOTAM
+                img_name = notam_id.replace('/', '-') + '.png'
+                img_path = os.path.join('/home/NOTAMtoday/NOTAMtoday/SNAPs', img_name)
+                # Check if the image exists
+                if os.path.exists(img_path):
+                    # Send the image with NOTAM details as the caption to the Telegram chat
+                    send_telegram_image(GROUP_CHAT_ID, API_KEY, img_path, notam)
+                else:
+                    # If the image doesn't exist, just send the NOTAM message
+                    send_telegram_message(GROUP_CHAT_ID, API_KEY, message)
+                    
+                existing_ids.add(notam[0])
+
+            # # Write the updated NOTAM IDs back to the file
+            # write_notam_ids(existing_ids)
+
+            # Everything went fine, break the retry loop
+            return
+        
+        except requests.ConnectionError:
+            logging.error(f"Network error encountered. Retry attempt {i+1}.")
+            if i == retry_count - 1:
+                logging.error("Max retries reached without success.")
+                return
+            time.sleep(retry_delay)
+            
+# Main execution point
+if __name__ == '__main__':
+    # Run the code with retries. If a network error occurs, wait 5 mins and try again up to 50 times
+    run_with_retries(retry_count=50)       
+
+
+# Use cronjob for timing the bot and deleting old files
+

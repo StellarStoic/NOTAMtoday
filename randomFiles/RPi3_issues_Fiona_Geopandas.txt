@@ -34,6 +34,7 @@ Add the following lines to the end of the .bashrc file:
 export CPLUS_INCLUDE_PATH=/usr/include/gdal
 export C_INCLUDE_PATH=/usr/include/gdal
 export GDAL_DATA=/usr/share/gdal
+
 Save and Exit
 
 4.) Apply the Changes:
@@ -43,7 +44,10 @@ source ~/.bashrc
 5.) pip install fiona 
 
  
-6.) now that you have successfully installed fiona and configured GDAL, you can proceed to install geopandas. Since geopandas also has dependencies on other geospatial libraries, it's a good idea to use a package manager like apt to install them before installing geopandas.
+6.) now that you have successfully installed fiona and configured GDAL, you can proceed to 
+install geopandas but not so fast !!! -> Since geopandas also has dependencies on other 
+geospatial libraries, it's a good idea to use a package manager like apt to install them before
+ installing geopandas.
 
 You can install the necessary libraries using the following command:
 sudo apt install libgeos-dev libproj-dev

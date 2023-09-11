@@ -3,18 +3,18 @@ sudo apt-get update
 sudo apt update
 sudo apt install chromium-chromedriver
 
+which chromedriver (shows path to chromedriver)
+
 echo 'export PATH=$PATH:/path/to/chromedriver' >> ~/.bashrc
+
 source ~/.bashrc
 
-which chromedriver
+
 chromedriver --version
-
-
 
 
 sudo apt-get install chromium-browser
 chromium-browser --version
-
 
 
 ls -l /usr/bin/chromedriver
@@ -30,6 +30,6 @@ Found existing installation: selenium 4.11.2
 pip3 install selenium==3.141.0
 
 
-This script is working on RPi3 after we downgraded Selenium 
+This script is working on RPi3 after we downgraded Selenium to 3.141.0 
 
 

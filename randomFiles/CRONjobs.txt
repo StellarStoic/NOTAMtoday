@@ -1,0 +1,24 @@
+CRONjob for none ROOT usr
+
+crontab -e
+
+# NOTAMtoday posts every morning at 03:00
+00 03 * * * python3 /home/NOTAMtoday/NOTAMtoday/NOTAMtodaybot.py >> /home/NOTAMtoday/NOTAMtoday/CronLog.log 2>&1
+
+
+
+CRONjob for ROOT usr
+
+sudo crontab -e
+
+#reboot rpi every 2 days at 02:11
+11 02 */1 * * /sbin/reboot
+
+# Delete files in NOTAMtoday KMLs folder 2 minutes before the bot runs
+58 02 * * * sudo rm -rf /home/NOTAMtoday/NOTAMtoday/KMLs
+
+# Delete files in NOTAMtoday HTMLs folder 2 minutes before the bot runs
+58 02 * * * sudo rm -rf /home/NOTAMtoday/NOTAMtoday/HTMLs
+
+# Delete files in NOTAMtoday SNAPs folder 2 minutes before the bot runs
+58 02 * * * sudo rm -rf /home/NOTAMtoday/NOTAMtoday/SNAPs

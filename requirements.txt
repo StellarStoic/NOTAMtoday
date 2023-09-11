@@ -8,3 +8,7 @@ python-telegram-bot==13.13
 requests==2.31.0
 selenium==3.141.0
 telegram==0.0.1
+
+# for the webserver notam.today app.py
+Flask
+flask-cors-4.0.0

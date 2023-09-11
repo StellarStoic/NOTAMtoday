@@ -1,21 +1,93 @@
+# Copyright (c) [2023] [StellarStoic on Github]
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import pytz
 import re
+import os
+import json
+import time
+import logging
+
+# Configure logging
+logging.basicConfig(filename="parser.log", level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+
+SAVE_JSON_FILES = False  # Set to False if you don't want to save NOTAMS in JSON files
 
 # Function to convert feet to meters
 def feet_to_meters(feet):
     return round(feet * 0.3048, 1)
 
 # The URL of the page you want to scrape
-url = "https://www.sloveniacontrol.si/Strani/Summary-C.aspx"
+# url = "https://www.sloveniacontrol.si/Strani/Summary-C.aspx" # SI
+url = "https://www.sloveniacontrol.si/Strani/Summary-B.aspx" # EN
+
+
+# NEW CODE: Initialize retry_count
+retry_count = 0
+
+# Retry mechanism if there's no network
+while retry_count < 50:  # Up to 50 attempts
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url)
+
+        # Check if the request was successful
+        if response.status_code != 200:
+            raise Exception(f"Failed to retrieve the page: {response.status_code}")
+        
+        # If successful, break the loop
+        break
+
+    except Exception as e:
+        logging.warning(e)
+        retry_count += 1
+        logging.info(f"Attempt {retry_count} failed. Retrying again in 5 minutes...")
+        time.sleep(300)  # Wait 5 minutes before retrying
+
+# This line checks if the number of retry attempts has been reached.
+# If you change the number above in 'while retry_count < 20:', make sure to update this one as well.
+if retry_count == 50:
+    logging.error("Failed to retrieve the page after 50 attempts. Exiting.")
+    print("Failed to retrieve the page after 50 attempts. Exiting.")
+    exit() # If the loop finishes and we didn't succeed, exit the program
 
 # Send a GET request to the URL
 response = requests.get(url)
 
 # Check if the request was successful
 if response.status_code != 200:
+    logging.info("Failed to retrieve the page:", response.status_code)
+    print("Failed to retrieve the page:", response.status_code)
+    exit()
+
+# Send a GET request to the URL
+response = requests.get(url)
+
+# Check if the request was successful
+if response.status_code != 200:
+    logging.info("Failed to retrieve the page:", response.status_code)
     print("Failed to retrieve the page:", response.status_code)
     exit()
 
@@ -30,6 +102,7 @@ notam_data_elements = soup.find_all(class_="kzps-notam-item")
 
 # Check if any NOTAM data elements were found
 if not notam_data_elements:
+    logging.info("No NOTAM data elements found.")
     print("No NOTAM data elements found.")
 else:
     # Get today's date
@@ -54,8 +127,7 @@ else:
         skip_notam = False
         
         # Extract only these second and third letters of a NOTAM Q code
-        # https://skybrary.aero/sites/default/files/bookshelf/3298.pdf  on page 79 explains what second and third letters in qCode are
-        # if first link doesnt work use -> https://www.icao.int/WACAF/Documents/Meetings/2018/AIS%20to%20AIM/Volume%20III%20Appendix%206%202018-02-19.pdf
+        # https://skybrary.aero/sites/default/files/bookshelf/3298.pdf 
         notam_details = notam_data.find_all('p')
         for detail in notam_details:
             if detail.get_text().startswith('Q)'):
@@ -153,6 +225,7 @@ else:
                         continue  # Continue to the next format if a ValueError occurs
 
                 if timestamp is None:
+                    logging.info("Error parsing imestamp/Čas objave):", timestamp_str)
                     print("Error parsing imestamp/Čas objave):", timestamp_str)
 
         # Skip this NOTAM if the flag is set
@@ -165,6 +238,36 @@ else:
 
         # Store the data in a tuple
         notam_data_tuple = (notam_number, q_data, a_data, b_data, c_data, d_data, e_data, f_data, g_data, timestamp, kml_link)
+        
+        # Function to save NOTAM data to a JSON file
+        def save_notam_to_json(notam_data_tuple):
+            # Create a directory to store NOTAM JSON files if it doesn't exist
+            directory = "JSONs"
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            
+            # Define the JSON file name based on the NOTAM ID
+            notam_id = notam_data_tuple[0].replace("/", "-")  # Replace forward slash with hyphen
+            json_file = os.path.join(directory, f"{notam_id}.json")
+            
+            # Create a dictionary for the NOTAM
+            notam_dict = {
+                "NOTAM_ID": notam_data_tuple[0],
+                "Q_Code": notam_data_tuple[1],
+                "Location": notam_data_tuple[2],
+                "none": notam_data_tuple[3],
+                "none": notam_data_tuple[4],
+                "Day_Time": notam_data_tuple[5],
+                "Description": notam_data_tuple[6],
+                "Lower_Altitude": notam_data_tuple[7],
+                "Upper_Altitude": notam_data_tuple[8],
+                "Published_timestamp": notam_data_tuple[9],
+                "KML_Link": notam_data_tuple[10]
+            }            
+            # Write the NOTAM data to the JSON file
+            with open(json_file, "w") as f:
+                json.dump(notam_dict, f, ensure_ascii=False, indent=4)
+
 
         # Loop through the NOTAM details and find the start and end dates
         for detail in notam_details:
@@ -178,6 +281,7 @@ else:
                             start_date = datetime.strptime(start_date_str, "%d.%m.%Y %H:%M")
                             start_date = pytz.timezone('Europe/Ljubljana').localize(start_date)
                         except ValueError:
+                            logging.info("Error parsing start date for NOTAM:", notam_number)
                             print("Error parsing start date for NOTAM:", notam_number)
                             continue
             if detail.find(class_='kzps-notam-item-c') is not None:
@@ -185,7 +289,7 @@ else:
                 if date_pattern.match(end_date_str):  # Check if the date string matches the pattern
                     try:
                         if end_date_str == 'PERM':
-                            end_date = start_date + timedelta(hours=48)
+                            end_date = start_date + timedelta(hours=1000)
                         else:
                             # Handle "EST" abbreviation in the end date
                             if "EST" in end_date_str:
@@ -193,6 +297,7 @@ else:
                             end_date = datetime.strptime(end_date_str, "%d.%m.%Y %H:%M")
                             end_date = pytz.timezone('Europe/Ljubljana').localize(end_date)
                     except ValueError:
+                        logging.info("Error parsing end date for NOTAM:", notam_number)
                         print("Error parsing end date for NOTAM:", notam_number)
                         continue
         # Check if the NOTAM has valid start and end dates
@@ -202,39 +307,52 @@ else:
                 notams_by_day[today].append(notam_data_tuple)
 
     # Print the NOTAMs for today with feet to meters conversion for F) and G) data
+    logging.info("\n----------------------------------------")
     print("\n----------------------------------------")
     date_label = today.strftime('%A %d.%m.%Y')
+    logging.info(date_label)
     print(date_label)
     if notams_by_day[today]:
         for notam_data_tuple in notams_by_day[today]:
+            logging.info("----------------------------------------\n")
             print("----------------------------------------\n")
             notam_number, q_data, a_data, b_data, c_data, d_data, e_data, f_data, g_data, timestamp, kml_link = notam_data_tuple
+            logging.info(f"NOTAM Number: {notam_number}")
             print(f"NOTAM Number: {notam_number}")
             if q_data:
+                logging.info(q_data)
                 print(q_data)
             if a_data:
+                logging.info(a_data)
                 print(a_data)
             if b_data:
+                logging.info(b_data)
                 print(b_data)
             if c_data:
+                logging.info(c_data)
                 print(c_data)
             if d_data:
+                logging.info(d_data)
                 print(d_data)
             if e_data:
+                logging.info(e_data)
                 print(e_data)
             if f_data:
+                logging.info(f_data)
                 print(f_data)
             if g_data:
+                logging.info(g_data)
                 print(g_data)
             if timestamp:
+                logging.info(f"Čas objave: {timestamp}")
                 print(f"Čas objave: {timestamp}")
+            logging.info(f"KML File: {kml_link}")
             print(f"KML File: {kml_link}")
-    else:
-        print("No NOTAMs. Yay!")
+            
+            # Save the NOTAM data to a JSON file
+            if SAVE_JSON_FILES:
+                save_notam_to_json(notam_data_tuple) 
 
-    # if today in notams_by_day:
-    #     sample_notam = notams_by_day[today][0]
-    #     print(type(sample_notam))
-    #     print(sample_notam)
-    # else:
-    #     print("No NOTAMs found for today.")
+    else:
+        logging.info("No NOTAMs. Yay!")
+        print("No NOTAMs. Yay!")

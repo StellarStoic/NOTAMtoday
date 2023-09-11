@@ -8,5 +8,4 @@ python-telegram-bot==13.13
 requests==2.31.0
 selenium==3.141.0
 telegram==0.0.1
-
-
+gunicorn==21.2.0

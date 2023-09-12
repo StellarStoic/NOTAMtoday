@@ -27,7 +27,9 @@ def main():
         # Explicitly wait for the map element to be present
         try:
             element_present = EC.presence_of_element_located((By.ID, 'map_96633ea7002869c56cf6afa8144cb43a'))
-            WebDriverWait(driver, 60).until(element_present)
+            
+            # Explicit wait. tell the computer to wait until it sees a specific thing on the webpage
+            WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.ID, 'ElementID')))
         except Exception as e:
             print(f"Error: {e}")
 

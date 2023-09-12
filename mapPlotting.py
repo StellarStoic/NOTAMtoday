@@ -98,6 +98,23 @@ If you want the map to zoom out just a little bit when it does, decrease the exp
 
     css_element = folium.Element(css)
     m.get_root().header.add_child(css_element)
+    
+        # Inject watermark
+    
+    # triangle style https://image.nostr.build/e8083425eeb209672fcce31d9d07786d7f2edfa523dc21737592f121f339697c.png
+    # cloud style https://image.nostr.build/284e96b2745c7740aa42ed2955aedf7678d8abd10a87e708a8a3ff38c3340c2a.png
+    watermark = """
+<div style="position: fixed; 
+                : 10px;
+                margin-top: -67px;
+                margin-left: -52px; 
+                z-index: 9999;
+                opacity: 0.97;">
+        <img src="https://image.nostr.build/284e96b2745c7740aa42ed2955aedf7678d8abd10a87e708a8a3ff38c3340c2a.png" alt="© NOTAM.today" style="width:200px;">
+    </div>    """
+
+    watermark_element = folium.Element(watermark)
+    m.get_root().html.add_child(watermark_element)
 
     # Save the map as an HTML in the 'img' folder with the provided filename
     m.save(os.path.join('/home/NOTAMtoday/NOTAMtoday/HTMLs', filename + '.html'))

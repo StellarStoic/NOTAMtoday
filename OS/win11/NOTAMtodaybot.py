@@ -81,7 +81,8 @@ def read_notam_ids(filename="notamIDs.txt"):
     except FileNotFoundError:
         return set()
 
-# # This writes all the NotamID that we get (useful if you don't want to repeat NOTAMS)
+# # This writes all the NotamID that we get to notamIDs (useful if you don't want to repeat NOTAMS)
+# notamIDs.txt is at the moment to exclude unwanted NOTAMs from processing
 # def write_notam_ids(ids, filename="notamIDs.txt"):
 #     with open(filename, "w") as file:
 #         for notam_id in ids:

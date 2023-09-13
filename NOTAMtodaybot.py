@@ -38,7 +38,7 @@ def send_telegram_image(chat_id, api_key, img_path, notam):
     """
     Sends an image to the specified Telegram chat with NOTAM details as the caption.
     """
-    logging.error(f"Trying to send image from path: {img_path}")  # Debug: print image path
+    logging.error(f"Trying to send image from path: {img_path}")  # Debug: log image path
     print(f"Trying to send image from path: {img_path}")  # Debug: print image path
     
     # Check if the image exists at the specified path
@@ -51,17 +51,17 @@ def send_telegram_image(chat_id, api_key, img_path, notam):
     
     # Format the NOTAM message to be used as a caption
     caption = f'''
-NOTAM Number: {notam[0]}\n
+NOTAM number: {notam[0]}\n
 {notam[1]}\n
 {notam[2]}
 {notam[5]}\n
 {notam[6]}\n
 {notam[7]}\n
 {notam[8]}\n
-Čas objave: {notam[9]}
+Published: {notam[9]}
 KML File: {notam[10]}
 '''
-    
+
     with open(img_path, 'rb') as img_file:
         payload = {
             "chat_id": chat_id,
@@ -154,14 +154,14 @@ def run_with_retries(retry_count, retry_delay=300): # wait 5 minutes before retr
 
                 # Format the NOTAM message
                 message = f'''
-            NOTAM Number: {notam[0]}\n
+            NOTAM number: {notam[0]}\n
             {notam[1]}\n
             {notam[2]}
             {notam[5]}\n
             {notam[6]}\n
             {notam[7]}\n
             {notam[8]}\n
-            Čas objave: {notam[9]}
+            Published: {notam[9]}
             KML File: {notam[10]}
             '''
 
@@ -194,8 +194,7 @@ def run_with_retries(retry_count, retry_delay=300): # wait 5 minutes before retr
 # Main execution point
 if __name__ == '__main__':
     # Run the code with retries. If a network error occurs, wait 5 mins and try again up to 50 times
-    run_with_retries(retry_count=50)       
-
+    run_with_retries(retry_count=50)
 
 # Use cronjob for timing the bot and deleting old files
 

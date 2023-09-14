@@ -40,8 +40,8 @@ def feet_to_meters(feet):
     return round(feet * 0.3048, 1)
 
 # The URL of the page you want to scrape
-# url = "https://www.sloveniacontrol.si/Strani/Summary-C.aspx" # SI
-url = "https://www.sloveniacontrol.si/Strani/Summary-B.aspx" # EN
+url = "https://www.sloveniacontrol.si/Strani/Summary-C.aspx"
+
 
 
 # NEW CODE: Initialize retry_count

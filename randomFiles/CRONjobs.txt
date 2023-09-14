@@ -11,14 +11,16 @@ CRONjob for ROOT usr
 
 sudo crontab -e
 
-#reboot rpi every 2 days at 02:11
-11 02 */1 * * /sbin/reboot
+#reboot rpi every 2 days at 01:22
+22 01 */2 * * /sbin/shutdown -r now
 
 # Delete files in NOTAMtoday KMLs folder 2 minutes before the bot runs
-58 02 * * * sudo rm -rf /home/NOTAMtoday/NOTAMtoday/KMLs
+58 03 * * * sudo rm -rf /home/NOTAMtoday/NOTAMtoday/KMLs
 
 # Delete files in NOTAMtoday HTMLs folder 2 minutes before the bot runs
-58 02 * * * sudo rm -rf /home/NOTAMtoday/NOTAMtoday/HTMLs
+58 03 * * * sudo rm -rf /home/NOTAMtoday/NOTAMtoday/HTMLs
 
 # Delete files in NOTAMtoday SNAPs folder 2 minutes before the bot runs
-58 02 * * * sudo rm -rf /home/NOTAMtoday/NOTAMtoday/SNAPs
+# I decided to keep images for now
+# 58 03 * * * sudo rm -rf /home/NOTAMtoday/NOTAMtoday/SNAPs
+

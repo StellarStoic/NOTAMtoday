@@ -9,8 +9,8 @@ import mapSnap
 from mapPlotting import main as generate_map
 from mapSnap import main as capture_image
 import time
-from datetime import datetime
-from datetime import date
+import calendar
+from datetime import datetime, date, timedelta
 from requests.exceptions import RequestException
 
 # Configure logging
@@ -21,6 +21,24 @@ load_dotenv()
 
 API_KEY = os.getenv("API_KEY")
 GROUP_CHAT_ID = os.getenv("GROUP_CHAT_ID")
+
+def ljubljana_time_offset():
+    # Trenutni datum in čas v UTC
+    utc_now = datetime.utcnow()
+
+    # Preverjanje, ali je trenutno poletni čas v Ljubljani
+    # Poletni čas v Evropi običajno traja od zadnje nedelje v marcu do zadnje nedelje v oktobru
+    year = utc_now.year
+    last_sunday_march = max(week[0] for week in calendar.monthcalendar(year, 3))
+    last_sunday_october = max(week[0] for week in calendar.monthcalendar(year, 10))
+    
+    start_dst = datetime(year, 3, last_sunday_march, 1, 0, 0)
+    end_dst = datetime(year, 10, last_sunday_october, 1, 0, 0)
+
+    if start_dst <= utc_now.replace(tzinfo=None) < end_dst:
+        return "v POLETNEM času, prištejte +2 uri"
+    else:
+        return "v ZIMSKEM času, prištejte +1 uro"
 
 # Function to send a message to the Telegram group
 def send_telegram_message(chat_id, api_key, message):
@@ -47,17 +65,20 @@ def send_telegram_image(chat_id, api_key, img_path, notam):
     
     base_url = f"https://api.telegram.org/bot{api_key}/sendPhoto"
     
+    utc_message = f"\nOpomba:\n V aviaciji se vedno uporablja UTC čas in, ker smo v SLO trenutno {ljubljana_time_offset()} UTC času v NOTAM sporočilu."
+    
     # Format the NOTAM message to be used as a caption
     caption = f'''
 NOTAM Number: {notam[0]}\n
 {notam[1]}\n
-{notam[2]}
+{notam[2]}\n
 {notam[5]}\n
 {notam[6]}\n
 {notam[7]}\n
 {notam[8]}\n
 Čas objave: {notam[9]}
 KML File: {notam[10]}
+{utc_message}
 '''
     
     with open(img_path, 'rb') as img_file:

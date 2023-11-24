@@ -44,7 +44,7 @@ url = "https://www.sloveniacontrol.si/Strani/Summary-C.aspx"
 
 
 
-# NEW CODE: Initialize retry_count
+# Initialize retry_count
 retry_count = 0
 
 # Retry mechanism if there's no network
